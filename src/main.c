@@ -10,6 +10,7 @@ typedef struct
 {
     int arg;
     int result;
+    void *retlabel;
 }context;
 
 int fact(int arg)
@@ -24,6 +25,7 @@ int fact(int arg)
     context cn;
     cn.result = 1;
     cn.arg = arg;
+    cn.retlabel = 0;
      
     push_stack( cn, fact_stack);
     fact_stack_size = 1;
@@ -34,19 +36,21 @@ int fact(int arg)
 func:
         if(state == RET)
         {
-            goto cont;
+            cn = fact_stack[fact_stack_size];
+            // drop 1c frame here
+            goto *cn.retlabel;
         }
         if(state == CALL)
         {
             if ( fact_stack[fact_stack_size - 1].arg == 1)
             {
                 fact_stack[fact_stack_size - 1].result = 1;
-                fact_stack_size--;
                 state=RET;
-                continue;
+                goto retfunc;
             }else
             {
                 cn.arg--;
+                cn.retlabel = &&cont;
                 push_stack(cn, fact_stack);
                 state = CALL;
                 goto func;
@@ -55,10 +59,12 @@ func:
 cont:
             fact_stack[fact_stack_size - 1].result =
                 fact_stack[fact_stack_size - 1].arg
-                * fact_stack[fact_stack_size].result;
-            fact_stack_size--;
+                * cn.result;
             state = RET;
+            goto retfunc;
         }
+retfunc:
+        fact_stack_size--;
     }
     result *= fact_stack[0].result;
     return result;
