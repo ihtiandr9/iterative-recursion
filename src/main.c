@@ -1,54 +1,71 @@
 #include<assert.h>
 #include<stdio.h>
 
-#define push_stack(__arg, __stack) \
+#define push_stack(__cn, __stack) \
     __stack##_size++; \
-     __stack[__stack##_size - 1] = arg;
+     __stack[__stack##_size - 1] = __cn;
 
 enum {CALL, RET};
+typedef struct
+{
+    int arg;
+    int result;
+}context;
 
 int fact(int arg)
 {
-    int fact_stack[256];
+    context fact_stack[256];
     int fact_stack_size = 0;
     int result = 1;
 
     if (arg == 0)
         return 1;
     assert(arg > 0);
-    push_stack(arg, fact_stack);
+    context cn;
+    cn.result = 1;
+    cn.arg = arg;
+     
+    push_stack( cn, fact_stack);
     fact_stack_size = 1;
     
     int state = CALL;
     while(fact_stack_size)
     {
+func:
         if(state == RET)
         {
-            arg = fact_stack[fact_stack_size - 1];
-            fact_stack_size--;
             goto cont;
         }
         if(state == CALL)
         {
-            arg = fact_stack[fact_stack_size - 1];
-            if ( arg != 1 )
+            if ( fact_stack[fact_stack_size - 1].arg == 1)
             {
-                arg--;
-                push_stack(arg, fact_stack);
+                fact_stack[fact_stack_size - 1].result = 1;
+                fact_stack_size--;
+                state=RET;
+                continue;
             }else
             {
-cont:
-                fact_stack[fact_stack_size - 1] *= arg;
-                state = RET;
+                cn.arg--;
+                push_stack(cn, fact_stack);
+                state = CALL;
+                goto func;
             }
+
+cont:
+            fact_stack[fact_stack_size - 1].result =
+                fact_stack[fact_stack_size - 1].arg
+                * fact_stack[fact_stack_size].result;
+            fact_stack_size--;
+            state = RET;
         }
     }
-    result *= fact_stack[0];
+    result *= fact_stack[0].result;
     return result;
 }
 
 int main(void)
 {
-    printf("Fact = %d", fact(5));
+    printf("Fact = %d\n", fact(5));
     return 0;
 }
