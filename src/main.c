@@ -1,6 +1,7 @@
 #include<assert.h>
 #include<stdio.h>
 
+#define MAX_STACK_DEPTH 255
 #define push_stack(__cn, __stack) \
     __stack##_size++; \
      __stack[__stack##_size - 1] = __cn;
@@ -10,7 +11,7 @@ typedef struct
 {
     int arg;
     int result;
-    void *retlabel;
+    int retlabel;
 }context;
 
 int fact(int arg)
@@ -19,54 +20,51 @@ int fact(int arg)
     int fact_stack_size = 0;
     int result = 1;
 
-    if (arg == 0)
-        return 1;
     assert(arg > 0);
     context cn;
     cn.result = 1;
     cn.arg = arg;
-    cn.retlabel = 0;
+    cn.retlabel = MAX_STACK_DEPTH;
      
     push_stack( cn, fact_stack);
     fact_stack_size = 1;
     
     int state = CALL;
+
     while(fact_stack_size)
     {
-func:
         if(state == RET)
         {
-            cn = fact_stack[fact_stack_size];
+            cn = fact_stack[fact_stack_size - 1];
+            fact_stack_size--;
             // drop 1c frame here
-            goto *cn.retlabel;
         }
-        if(state == CALL)
+
+        if(state == CALL || cn.retlabel < 1)
         {
-            if ( fact_stack[fact_stack_size - 1].arg == 1)
+            if ( cn.arg == 1)
             {
-                fact_stack[fact_stack_size - 1].result = 1;
+                cn.result = 1;
                 state=RET;
-                goto retfunc;
+                continue;
             }else
             {
                 cn.arg--;
-                cn.retlabel = &&cont;
+                cn.retlabel = 1;
                 push_stack(cn, fact_stack);
                 state = CALL;
-                goto func;
+                continue;
             }
-
-cont:
-            fact_stack[fact_stack_size - 1].result =
-                fact_stack[fact_stack_size - 1].arg
-                * cn.result;
-            state = RET;
-            goto retfunc;
         }
-retfunc:
-        fact_stack_size--;
+
+            if (state == RET && cn.retlabel == 1)
+            {
+                fact_stack[fact_stack_size - 1].result =
+                    fact_stack[fact_stack_size - 1].arg
+                    * cn.result;
+            }
     }
-    result *= fact_stack[0].result;
+    result *= cn.result;
     return result;
 }
 

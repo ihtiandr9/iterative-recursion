@@ -20,6 +20,12 @@ add_executable(iteration
 
 ## debug target
 
+add_custom_target(run
+    COMMAND	./iteration
+    COMMENT "run applic"
+    DEPENDS ./iteration
+)
+
 add_custom_target(debug
     COMMAND	gdb ./iteration
     COMMENT "GDB Debug"
