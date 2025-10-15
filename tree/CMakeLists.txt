@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.0...3.30)
-project(iteration)
+project(tree)
 
 include_directories(/usr/local/include
     /usr/include
@@ -14,22 +14,22 @@ if(NOT DEFINED _Release_)
 endif()
 
 ## main executable file
-add_executable(iteration
+add_executable(tree
     ${SOURCE_C}
 )
 
 ## debug target
 
 add_custom_target(run
-    COMMAND	./iteration
-    COMMENT "run applic"
-    DEPENDS ./iteration
+    COMMAND	./tree
+    COMMENT "Run application"
+    DEPENDS ./tree
 )
 
 add_custom_target(debug
-    COMMAND	gdb ./iteration
+    COMMAND	gdb ./tree
     COMMENT "GDB Debug"
-    DEPENDS ./iteration
+    DEPENDS ./tree
 )
 
-install(TARGETS iteration DESTINATION /usr/local/bin)
+install(TARGETS tree DESTINATION /usr/local/bin)

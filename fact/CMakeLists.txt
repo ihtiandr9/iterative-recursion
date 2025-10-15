@@ -22,7 +22,7 @@ add_executable(iteration
 
 add_custom_target(run
     COMMAND	./iteration
-    COMMENT "run applic"
+    COMMENT "Run application"
     DEPENDS ./iteration
 )
 

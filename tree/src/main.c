@@ -1,75 +1,123 @@
+/*
+ *
+ *
+ * */
 #include<assert.h>
 #include<stdio.h>
 
-#define MAX_STACK_DEPTH 255
+#define MAX_STACK_DEPTH 256
 #define push_stack(__cn, __stack) \
-    __stack##_size++; \
-     __stack[__stack##_size - 1] = __cn;
+    __stack##_top++; \
+    __stack[__stack##_top] = __cn;
 
-enum {CALL, RET};
+enum {CALL, RETLABEL1, RETLABEL2, RET};
+typedef struct tree tree;
+struct tree
+{
+    tree *left;
+    tree *right;
+    int value;
+};
+
 typedef struct
 {
-    int arg;
+    tree *arg;
     int result;
     int retlabel;
 }context;
 
-int fact(int arg)
+int traverse(tree* arg)
 {
-    context fact_stack[256];
-    int fact_stack_size = 0;
-    int result = 1;
+    context tree_stack[MAX_STACK_DEPTH];
+    int tree_stack_top = -1;
+    int result = 0;
 
     assert(arg > 0);
-    context cn;
-    cn.result = 1;
+    context cn, *prev_cn = 0;
+    cn.result = result;
     cn.arg = arg;
-    cn.retlabel = MAX_STACK_DEPTH;
+    cn.retlabel = RET;
      
-    push_stack( cn, fact_stack);
-    fact_stack_size = 1;
+    push_stack( cn, tree_stack);
     
     int state = CALL;
 
-    while(fact_stack_size)
+    while( tree_stack_top >=0 )
     {
         if(state == RET)
         {
-            cn = fact_stack[fact_stack_size - 1];
-            fact_stack_size--;
-            // drop 1c frame here
+            prev_cn = &tree_stack[tree_stack_top];
+            state = prev_cn->retlabel;
+            tree_stack_top--;
+            if ( tree_stack_top >= 0)
+                cn = tree_stack[tree_stack_top];
         }
 
-        if(state == CALL || cn.retlabel < 1)
+        if( state < RETLABEL1 )
         {
-            if ( cn.arg == 1)
+            if ( cn.arg -> left )
             {
-                cn.result = 1;
-                state=RET;
+                cn.arg = cn.arg -> left;
+                cn.result = 0;
+                cn.retlabel = RETLABEL1;
+                push_stack(cn, tree_stack);
+                state = CALL;
                 continue;
-            }else
+            }
+        }
+        if( state < RETLABEL2 )
+        {
+            if( state == RETLABEL1 )
             {
-                cn.arg--;
-                cn.retlabel = 1;
-                push_stack(cn, fact_stack);
+                printf("LeftValue = %d\n", prev_cn->arg->value);
+            }
+            if ( cn.arg -> right )
+            {
+                cn.arg = cn.arg -> right;
+                cn.result = 0;
+                cn.retlabel = RETLABEL2;
+                push_stack(cn, tree_stack);
                 state = CALL;
                 continue;
             }
         }
 
-            if (state == RET && cn.retlabel == 1)
+        if (state < RET )
+        {
+            if (state == RETLABEL2)
             {
-                fact_stack[fact_stack_size - 1].result =
-                    fact_stack[fact_stack_size - 1].arg
-                    * cn.result;
+                printf("RightValue = %d\n", prev_cn->arg->value);
             }
+        }
+        state = RET;
     }
+    printf("RootValue = %d\n", cn.arg->value);
     result *= cn.result;
     return result;
 }
 
 int main(void)
 {
-    printf("Fact = %d\n", fact(5));
+    tree right;
+    right.value = 3;
+    right.left = NULL;
+    right.right = NULL;
+
+    tree leftright;
+    leftright.value = 4;
+    leftright.left = NULL;
+    leftright.right = NULL;
+    
+    tree left;
+    left.value = 1;
+    left.left = NULL;
+    left.right = &leftright;
+
+    tree root;
+    root.value = 2;
+    root.left = &left;
+    root.right = &right;
+
+    traverse(&root);
     return 0;
 }

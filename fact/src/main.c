@@ -3,8 +3,8 @@
 
 #define MAX_STACK_DEPTH 255
 #define push_stack(__cn, __stack) \
-    __stack##_size++; \
-     __stack[__stack##_size - 1] = __cn;
+    __stack##_top++; \
+     __stack[__stack##_top] = __cn;
 
 enum {CALL, RET};
 typedef struct
@@ -17,26 +17,26 @@ typedef struct
 int fact(int arg)
 {
     context fact_stack[256];
-    int fact_stack_size = 0;
+    int fact_stack_top = -1;
     int result = 1;
 
     assert(arg > 0);
     context cn;
+
     cn.result = 1;
     cn.arg = arg;
     cn.retlabel = MAX_STACK_DEPTH;
      
     push_stack( cn, fact_stack);
-    fact_stack_size = 1;
     
     int state = CALL;
 
-    while(fact_stack_size)
+    while(fact_stack_top >= 0)
     {
         if(state == RET)
         {
-            cn = fact_stack[fact_stack_size - 1];
-            fact_stack_size--;
+            cn = fact_stack[fact_stack_top];
+            fact_stack_top --;
             // drop 1c frame here
         }
 
@@ -59,8 +59,8 @@ int fact(int arg)
 
             if (state == RET && cn.retlabel == 1)
             {
-                fact_stack[fact_stack_size - 1].result =
-                    fact_stack[fact_stack_size - 1].arg
+                fact_stack[fact_stack_top].result =
+                    fact_stack[fact_stack_top].arg
                     * cn.result;
             }
     }
